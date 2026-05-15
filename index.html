@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <div id="header">
+        <h1 id="header-title">Habit Tracker</h1>
+        <div id="header-buttons">
+          <button id="header-category">Add Category</button>
+          <button id="theme-toggle">🌙</button>
+        </div>
+      </div>
+      <div id="board"></div>
+      <div id="modal-overlay" class="hidden">
+        <div id="modal">
+          <h2 id="modal-heading">Add Habit</h2>
+          <input id="modal-input" placeholder="Add habit here" />
+          <div id="modal-buttons">
+            <button id="modal-cancel">Cancel</button>
+            <button id="modal-save">Save</button>
+          </div>
+        </div>
+      </div>
+      <div id="confirm-overlay" class="hidden">
+        <div id="confirm-modal">
+          <h2 id="confirm-heading">Delete this habit?</h2>
+          <p id="confirm-message">This action cannot be undone.</p>
+          <div id="confirm-buttons">
+            <button id="confirm-cancel">Cancel</button>
+            <button id="confirm-delete">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
