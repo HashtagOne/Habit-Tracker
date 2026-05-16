@@ -5,7 +5,7 @@ let state = {
 let modalCallback = null;
 let confirmCallback = null;
 
-////////////////* STATE *////////////////////////////
+//////////////// STATE ////////////////////////////
 
 function saveState() {
     localStorage.setItem("habit-state", JSON.stringify(state));
@@ -16,7 +16,7 @@ function loadState() {
     if (stored) state = JSON.parse(stored);
 }
 
-/////////////* CATEGORY FUNCTIONALITY *////////////////////////
+///////////// CATEGORY FUNCTIONALITY ////////////////////////
 
 function addCategory() {
     const colors = ["red", "green", "blue", "purple", "yellow"];
@@ -45,7 +45,7 @@ function deleteCategory(id) {
         });
 }
 
-///////////* CONFIRM MODAL *//////////////////////////
+/////////// CONFIRM MODAL //////////////////////////
 
 function openConfirm(heading, callback) {
     confirmCallback = callback;
@@ -63,7 +63,7 @@ function closeConfirm() {
 
 } 
 
-//////////////////////* HABIT */////////////////////////////
+////////////////////// HABIT /////////////////////////////
 function addHabit(categoryId) {
     const category = state.categories.find(c => c.id === categoryId)
 
@@ -102,7 +102,7 @@ function toggleHabit(categoryId, habitId) {
     saveState();
 }
 
-//////////////////* MODAL *///////////////////////////
+////////////////// MODAL ///////////////////////////
 
 function openModal(heading, color, callback) {
     modalCallback = callback;
@@ -136,51 +136,85 @@ function closeModal() {
 
 function render() {
     const board = document.querySelector("#board");
-    board.innerHTML = ""
+    board.innerHTML = "";
+
     state.categories.forEach(category => {
         const div = document.createElement("div");
         div.classList.add("category");
         div.setAttribute("data-color", category.color);
-        div.dataset.id = category.id
+        div.dataset.id = category.id;
+
         div.innerHTML = `
-        <div class="category-header">
-            <h2 class="category-name">${category.name}</h2>
-            <button class="delete-btn">✕</button>
-        </div>
-        <div class="habits-list">
-            ${category.habits.map(habit => `
-                    <div class="habit-row">
-                    <input type="checkbox" class="habit-checkbox">
-                    <span class="habit-name">${habit.name}</span>
-                    <button class="delete-habit-btn">✕</button>
-                </div>
-            `).join("")}
-        </div>
-        <button class="add-habit-btn">+ Add habit</button>
+            <div class="category-header">
+                <h2 class="category-name">${category.name}</h2>
+                <button class="delete-btn">✕</button>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill"></div>
+            </div>
+            <div class="habits-list">
+                ${category.habits.map(habit => {
+                    // calculate streak before building HTML
+                    let streak = 0;
+                    const today = new Date().toISOString().split("T")[0];
+                    if (habit.completions.includes(today)) streak++;
+
+                    let date = new Date();
+                    date.setDate(date.getDate() - 1);
+                    while (true) {
+                        const dateStr = date.toISOString().split("T")[0];
+                        if (habit.completions.includes(dateStr)) {
+                            streak++;
+                            date.setDate(date.getDate() - 1);
+                        } else { break; }
+                    }
+
+                    return `
+                        <div class="habit-row">
+                            <input type="checkbox" class="habit-checkbox">
+                            <span class="habit-name">${habit.name}</span>
+                            <span class="habit-streak">🔥 ${streak}</span>
+                            <button class="delete-habit-btn">✕</button>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+            <button class="add-habit-btn">+ Add habit</button>
         `;
+
+        // progress bar
+        const today = new Date().toISOString().split("T")[0];
+        const completed = category.habits.filter(h => h.completions.includes(today)).length;
+        const total = category.habits.length;
+        const percentage = total === 0 ? 0 : (completed / total) * 100;
+        div.querySelector(".progress-bar-fill").style.width = `${percentage}%`;
+
+        // event listeners
         div.querySelector(".delete-btn").addEventListener("click", () => {
             deleteCategory(category.id);
         });
-        div.querySelector(".add-habit-btn").addEventListener("click", () =>{
+
+        div.querySelector(".add-habit-btn").addEventListener("click", () => {
             addHabit(category.id);
         });
+
+        div.querySelectorAll(".habit-checkbox").forEach((chkbx, index) => {
+            chkbx.checked = category.habits[index].completions.includes(today);
+            chkbx.addEventListener("click", () => {
+                toggleHabit(category.id, category.habits[index].id);
+            });
+        });
+
         div.querySelectorAll(".delete-habit-btn").forEach((btn, index) => {
             btn.addEventListener("click", () => {
                 deleteHabit(category.id, category.habits[index].id);
             });
         });
-        div.querySelectorAll(".habit-checkbox").forEach((chkbx, index) => {
-            chkbx.addEventListener("click", () => {
-                toggleHabit(category.id, category.habits[index].id);
-            })
-            const today = new Date().toISOString().split("T")[0];
-            chkbx.checked = category.habits[index].completions.includes(today); 
-        })
 
         board.appendChild(div);
     });
 }
-
+//////////// DOM CONTENT RELOAD /////////////////////////
 document.addEventListener("DOMContentLoaded", () => {
     loadState();
     render();
