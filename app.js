@@ -5,7 +5,7 @@ let state = {
 
 let modalCallback = null;
 let confirmCallback = null;
-
+let isFirstRender = true;
 
 //////////////// STATE ////////////////////////////
 
@@ -23,29 +23,41 @@ function loadState() {
 function addCategory() {
     const colors = ["red", "green", "blue", "purple", "yellow"];
     const color = colors[state.colorIndex % colors.length];
-    state.colorIndex++;
 
     openModal("Add Category", color, (name) => {
+        newId = Date.now();
         state.categories.push({
-            id: Date.now(),
+            id: newId,
             name: name,
             color: color,
             habits: []
         });
-        console.log(state.categories);
-
+        state.colorIndex++;
         render();
         saveState();
+
+        const newCategoryEl = document.querySelector(`.category[data-id="${newId}"]`)
+        if (newCategoryEl) {
+            newCategoryEl.classList.add("pop-in");
+            newCategoryEl.addEventListener("animationend", () => {
+                newCategoryEl.classList.remove("pop-in");
+            }, {once: true});
+        }
     });
 }
 
 function deleteCategory(id) {
     openConfirm("Delete this category?", () => {
         const categoryEl = document.querySelector(`.category[data-id="${id}"]`)
-            state.categories = state.categories.filter(category => category.id !== id);
-            render();
-            saveState();
-        });
+        if (categoryEl) {
+            categoryEl.classList.add("pop-out");
+            setTimeout(() => {
+                state.categories = state.categories.filter(category => category.id !== id);
+                render();
+                saveState();
+            }, 250);
+        }
+    });
 }
 
 /////////// CONFIRM MODAL //////////////////////////
@@ -61,8 +73,13 @@ function openConfirm(heading, callback) {
 function closeConfirm() {
     const overlay = document.querySelector("#confirm-overlay");
     overlay.classList.remove("open");
-    overlay.classList.add("hidden");
-    confirmCallback = null;
+    overlay.classList.add("closing");
+
+    setTimeout(() => {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("closing");
+        confirmCallback = null;
+    }, 300);
 
 } 
 
@@ -101,8 +118,29 @@ function toggleHabit(categoryId, habitId) {
     } else {
         habit.completions.push(today);
     }
-    render();
+
+    const completed = category.habits.filter(h => h.completions.includes(today)).length;
+    const total = category.habits.length;
+    const percentage = total === 0 ? 0 : (completed/total) * 100;
+    const fill = document.querySelector(`.category[data-id="${categoryId}"] .progress-bar-fill`);
+    fill.style.width = `${percentage}%`;
+    console.log(fill);
     saveState();
+
+    let streak = 0;
+    if (habit.completions.includes(today)) streak ++;
+
+    let date = new Date();
+    date.setDate(date.getDate() - 1);
+    while (true) {
+        const dateStr = date.toISOString().split('T')[0];
+        if (habit.completions.includes(dateStr)) {
+            streak ++;
+            date.setDate(date.getDate() - 1);
+        } else { break; }
+    }
+    const habitEl = document.querySelector(`.category[data-id="${categoryId}"] .habit-row[data-id="${habitId}"] .habit-streak`);
+    habitEl.textContent = `🔥 ${streak}`;
 }
 
 ////////////////// MODAL ///////////////////////////
@@ -128,21 +166,55 @@ function openModal(heading, color, callback) {
     const hex = accentMap[color];
     document.querySelector("#modal-save").style.background = hex;
     document.querySelector("#modal-input").style.setProperty("--focus-color", hex);
+
+    
 }
 
 function closeModal() {
     const overlay = document.querySelector("#modal-overlay");
     overlay.classList.remove("open");
-    overlay.classList.add("hidden");
+    overlay.classList.add("closing");
     modalCallback = null;
+
+    setTimeout(() => {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("closing");
+        modalCallback = null;
+    }, 300);
 }
+
+//////////////// DARK MODE ////////////////////////////////
+function darkMode() {
+    const toggle = document.querySelector("#theme-toggle");
+    if (toggle.checked) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        localStorage.setItem("theme", "dark");
+    } else {
+        document. documentElement.removeAttribute("data-theme");
+        localStorage.removeItem("theme");
+    }
+}
+
+document.querySelector("#theme-toggle").addEventListener("change", darkMode);
+
+
 
 function render() {
     const board = document.querySelector("#board");
     board.innerHTML = "";
+    if (state.categories.length === 0) {
+        board.innerHTML = `
+        <div class="empty-state">
+            <p>No categories yet...</p>
+            <p> How about adding one below?</p>
+        </div>
+        `;
+        return;
+    }
 
-    state.categories.forEach(category => {
+    state.categories.forEach((category, index) => {
         const div = document.createElement("div");
+
         div.classList.add("category");
         div.setAttribute("data-color", category.color);
         div.dataset.id = category.id;
@@ -156,31 +228,33 @@ function render() {
                 <div class="progress-bar-fill"></div>
             </div>
             <div class="habits-list">
-                ${category.habits.map(habit => {
-                    // calculate streak before building HTML
-                    let streak = 0;
-                    const today = new Date().toISOString().split("T")[0];
-                    if (habit.completions.includes(today)) streak++;
+                ${category.habits.length === 0
+                    ? `<p class="empty-habits">No habits yet..</p>`
+                    : category.habits.map(habit => {
+                        // calculate streak before building HTML
+                        let streak = 0;
+                        const today = new Date().toISOString().split("T")[0];
+                        if (habit.completions.includes(today)) streak++;
 
-                    let date = new Date();
-                    date.setDate(date.getDate() - 1);
-                    while (true) {
-                        const dateStr = date.toISOString().split("T")[0];
-                        if (habit.completions.includes(dateStr)) {
-                            streak++;
-                            date.setDate(date.getDate() - 1);
-                        } else { break; }
-                    }
+                        let date = new Date();
+                        date.setDate(date.getDate() - 1);
+                        while (true) {
+                            const dateStr = date.toISOString().split("T")[0];
+                            if (habit.completions.includes(dateStr)) {
+                                streak++;
+                                date.setDate(date.getDate() - 1);
+                            } else { break; }
+                        }
 
-                    return `
-                        <div class="habit-row">
-                            <input type="checkbox" class="habit-checkbox">
-                            <span class="habit-name">${habit.name}</span>
-                            <span class="habit-streak">🔥 ${streak}</span>
-                            <button class="delete-habit-btn">✕</button>
-                        </div>
-                    `;
-                }).join("")}
+                        return `
+                            <div class="habit-row" data-id="${habit.id}">
+                                <input type="checkbox" class="habit-checkbox">
+                                <span class="habit-name">${habit.name}</span>
+                                <span class="habit-streak">🔥 ${streak}</span>
+                                <button class="delete-habit-btn">✕</button>
+                            </div>
+                        `;
+                    }).join("")}
             </div>
             <button class="add-habit-btn">+ Add habit</button>
         `;
@@ -190,7 +264,11 @@ function render() {
         const completed = category.habits.filter(h => h.completions.includes(today)).length;
         const total = category.habits.length;
         const percentage = total === 0 ? 0 : (completed / total) * 100;
-        div.querySelector(".progress-bar-fill").style.width = `${percentage}%`;
+        const fill = div.querySelector(".progress-bar-fill");
+        fill.style.width = "0%";
+        setTimeout(() => {
+            fill.style.width = `${percentage}%`;
+        }, 50);
 
         // event listeners
         div.querySelector(".delete-btn").addEventListener("click", () => {
@@ -214,8 +292,16 @@ function render() {
             });
         });
 
+        if (isFirstRender) {
+            div.style.animationName = "fadeInDown";
+            div.style.animationDuration = "0.8s";
+            div.style.animationTimingFunction = "ease";
+            div.style.animationFillMode = "both";
+            div.style.animationDelay = `${index * 0.2}s`;
+        }
         board.appendChild(div);
     });
+    isFirstRender = false;
     lucide.createIcons();
 }
 //////////// DOM CONTENT RELOAD /////////////////////////
@@ -240,5 +326,4 @@ document.addEventListener("DOMContentLoaded", () => {
         if (confirmCallback) confirmCallback();
         closeConfirm();
     });
-    document.querySelector("")
 });

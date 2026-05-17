@@ -52,11 +52,11 @@
 .category[data-color="green"]  .add-habit-btn { color: var(--accent-green); }
 .category[data-color="purple"] .add-habit-btn { color: var(--accent-purple); }
 
-.category[data-color="red"] .habit-checkbox.checked { background-color: var(--accent-red); }
-.category[data-color="blue"] .habit-checkbox.checked { background-color: var(--accent-blue); }
-.category[data-color="yellow"] .habit-checkbox.checked { background-color: var(--accent-yellow); }
-.category[data-color="green"] .habit-checkbox.checked { background-color: var(--accent-green); }
-.category[data-color="purple"] .habit-checkbox.checked { background-color: var(--accent-purple); }
+.category[data-color="red"] .habit-checkbox:checked { background-color: var(--accent-red); }
+.category[data-color="blue"] .habit-checkbox:checked { background-color: var(--accent-blue); }
+.category[data-color="yellow"] .habit-checkbox:checked { background-color: var(--accent-yellow); }
+.category[data-color="green"] .habit-checkbox:checked { background-color: var(--accent-green); }
+.category[data-color="purple"] .habit-checkbox:checked { background-color: var(--accent-purple); }
 /* GENERAL */
 body {
     background-color: var(--bg-app);
@@ -85,6 +85,13 @@ body {
     margin-top: 16px;
 }
 
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-top: 168px;
+}
+
 /* HEADER */
 #header {
     display: flex;
@@ -101,6 +108,7 @@ body {
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--text-primary);
+    transition: color 0.2s;
 }
 
 #header-category {
@@ -141,23 +149,74 @@ body {
 }
 
  /*THEME TOGGLE */
-#theme-toggle {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 1rem;
+
+ .theme-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s ease;
+ }
+
+ .theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+ }
+
+ .slider {
+    position: absolute; 
+    inset: 0;
+    background-color: var(--border);
+    border-radius: 99px;
+    transition: background-color 0.3s ease;
+ }
+
+ .slider-icon-light {
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    opacity: 1;
+    transition: opacity 0.2s;
+ }
+
+ .slider-icon-dark {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.01s;
 }
 
-#theme-toggle:hover {
-    background: var(--bg-app);
-    transform: translateY(-3px);
+#theme-toggle:checked ~ .slider .slider-icon-light {
+    opacity: 0;
 }
 
-#theme-toggle:active {
-    transform: scale(0.94);
+#theme-toggle:checked ~ .slider .slider-icon-dark {
+    opacity: 1;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#theme-toggle:checked + .slider {
+    background-color: #1a1a1a;
+}
+
+#theme-toggle:checked + .slider::before {
+    transform: translateX(20px);
 }
 
 /* CATEGORY CARD */
@@ -237,12 +296,26 @@ body {
 }
 
 .habit-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
     width: 18px;
     height: 18px;
     border-radius: 4px;
     border: 1.5px solid var(--border);
     flex-shrink: 0;
     cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.habit-checkbox:checked::after {
+    content: "✓";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    width: 100%;
+    height: 100%;
 }
 
 .habit-checkbox.checked {
@@ -256,6 +329,12 @@ body {
     padding: 6px;
     background: transparent;
     font-family: 'Outfit', sans-serif;
+}
+
+.empty-habits {
+    font-size:0.9rem;
+    margin-top: 8px;
+    opacity: 0.6;
 }
 
 
@@ -408,4 +487,115 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+/* ANIMATION */
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    } 
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes overlayFadeIn {
+    from {background: rgba(0,0,0,0); }
+    to { background: rgba(0,0,0,0.4); }
+}
+
+@keyframes modalAppear {
+    from {opacity: 0; transform: scale(0.96) translateY(-8px); }
+    to {opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes elementFadeIn {
+    from {opacity: 0; transform: translateY(6px); }
+    to {opacity: 1; transform: translateY(0); }
+}
+
+@keyframes overlayFadeOut {
+    from { background: rgba(0,0,0,0.4); }
+    to { background: rgba(0,0,0,0); }
+}
+
+@keyframes modalSink {
+    from {opacity: 1; transform: scale(1) translateY(0); }
+    to {opacity: 0; transform: scale(0.96) translateY(-8px); }
+}
+
+/* POP ANIMATION */
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.04); opacity: 1; }
+    100% { transform: scale(1); opacity: 1;}
+}
+
+@keyframes popOut {
+    0% { transform: scale(1); opacity: 1; }
+    30% { transform: scale(1.04); }
+    100% { transform: scale(0.8); opacity: 0; }
+}
+
+.pop-in {
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards !important;
+}
+
+.pop-out {
+    animation: popOut 0.25s ease forwards !important;
+}
+
+/* FOR MODAL ANIMATION*/
+#modal-overlay.open {
+    animation: overlayFadeIn 0.2s ease forwards;
+}
+
+#modal-overlay.open #modal {
+    animation: modalAppear 0.25s ease 0.2s both;
+}
+
+#modal-overlay.open #modal > * {
+    animation: elementFadeIn 0.2s ease both;
+}
+
+#modal-overlay.open #modal > *:nth-child(1) {animation-delay: 0.26s; }
+#modal-overlay.open #modal > *:nth-child(2) {animation-delay: 0.32s; }
+#modal-overlay.open #modal > *:nth-child(3) {animation-delay: 0.40s; }
+
+#modal-overlay.closing {
+    animation: overlayFadeOut 0.3s ease forwards;
+}
+
+#modal-overlay.closing #modal {
+    animation: modalSink 0.25s ease forwards;
+}
+
+
+/* CONFIRM ANIMATION */
+#confirm-overlay.open {
+    animation: overlayFadeIn 0.5s ease forwards;
+}
+
+#confirm-overlay.open #confirm-modal {
+    animation: modalAppear 0.25s ease 0.1s both;
+}
+
+#confirm-overlay.open #confirm-modal > * {
+    animation: elementFadeIn 0.2s ease both;
+}
+
+#confirm-overlay.open #confirm-modal > *:nth-child(1) { animation-delay: 0.26s; }
+#confirm-overlay.open #confirm-modal > *:nth-child(2) { animation-delay: 0.32s; }
+#confirm-overlay.open #confirm-modal > *:nth-child(3) { animation-delay: 0.40s; }
+
+#confirm-overlay.closing {
+    animation: overlayFadeOut 0.3s ease forwards;
+}
+
+#confirm-overlay.closing #confirm-modal {
+    animation: modalSink 0.25s ease forwards;
 }

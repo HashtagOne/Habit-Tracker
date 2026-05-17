@@ -10,6 +10,12 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+        document.querySelector("#theme-toggle").checked = true;
+      }
+    </script>
   </head>
   <body>
     <div id="app">
@@ -17,14 +23,24 @@
         <h1 id="header-title">Habit Tracker</h1>
         <div id="header-buttons">
           <button id="header-category">Add Category</button>
-          <button id="theme-toggle">🌙</button>
+          <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle" />
+            <span class="slider">
+              <span class="slider-icon-light">☀️</span>
+              <span class="slider-icon-dark">🌙</span>
+            </span>
+          </label>
         </div>
       </div>
       <div id="board"></div>
       <div id="modal-overlay" class="hidden">
         <div id="modal">
           <h2 id="modal-heading">Add Habit</h2>
-          <input id="modal-input" placeholder="Type habit here" />
+          <input
+            id="modal-input"
+            placeholder="Type habit here"
+            autocomplete="off"
+          />
           <div id="modal-buttons">
             <button id="modal-cancel">Cancel</button>
             <button id="modal-save">Save</button>
