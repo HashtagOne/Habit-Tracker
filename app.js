@@ -1,9 +1,11 @@
 let state = {
+    colorIndex: 0,
     categories: []
 };
 
 let modalCallback = null;
 let confirmCallback = null;
+
 
 //////////////// STATE ////////////////////////////
 
@@ -20,7 +22,8 @@ function loadState() {
 
 function addCategory() {
     const colors = ["red", "green", "blue", "purple", "yellow"];
-    const color = colors[state.categories.length % colors.length];
+    const color = colors[state.colorIndex % colors.length];
+    state.colorIndex++;
 
     openModal("Add Category", color, (name) => {
         state.categories.push({
@@ -147,7 +150,7 @@ function render() {
         div.innerHTML = `
             <div class="category-header">
                 <h2 class="category-name">${category.name}</h2>
-                <button class="delete-btn">✕</button>
+                <button class="delete-btn"><i data-lucide="trash-2"></i></button>
             </div>
             <div class="progress-bar-track">
                 <div class="progress-bar-fill"></div>
@@ -213,6 +216,7 @@ function render() {
 
         board.appendChild(div);
     });
+    lucide.createIcons();
 }
 //////////// DOM CONTENT RELOAD /////////////////////////
 document.addEventListener("DOMContentLoaded", () => {
