@@ -9,7 +9,8 @@
     --text-primary: #1a1a1a;
     --text-secondary: #888888;
     --border: rgba(0,0,0,0.08);
-    --shadow: rgba(0,0,0,0.06); 
+    --shadow: rgba(0,0,0,0.06);
+    --header-shadow: rgba(0,0,0,0.05);
 
     --accent-red: #e84040;
     --accent-blue: #4a90e2;
@@ -25,6 +26,7 @@
     --text-secondary: #666666;
     --border: rgba(255,255,255,0.08);
     --shadow: rgba(0,0,0,0.3);
+    --header-shadow:rgba(255, 255, 255, 0.1);
 }
 
 /* COLOR CATEGORY */
@@ -102,6 +104,8 @@ body {
     border-bottom: 1px solid var(--border);
     background: var(--bg-card);
     border-radius: 8px;
+    box-shadow: 0px 8px 12px var(--header-shadow);
+    transition: box-shadow 0.3s ease;
 }
 
 #header-title {

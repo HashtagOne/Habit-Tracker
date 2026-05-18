@@ -25,7 +25,7 @@ function addCategory() {
     const color = colors[state.colorIndex % colors.length];
 
     openModal("Add Category", color, (name) => {
-        newId = Date.now();
+        const newId = Date.now();
         state.categories.push({
             id: newId,
             name: name,
@@ -86,27 +86,54 @@ function closeConfirm() {
 ////////////////////// HABIT /////////////////////////////
 function addHabit(categoryId) {
     const category = state.categories.find(c => c.id === categoryId)
+    if (!category) return;
 
     openModal("Add Habit", category.color, (name) => {
+        const newId = Date.now();
+
         category.habits.push({
-            id: Date.now(),
+            id: newId,
             name: name,
             completions: []
         });
+
         render();
         saveState();
+
+        const newHabitEl = document.querySelector(`.category[data-id="${categoryId}"] .habit-row[data-id="${newId}"]`
+        );
+        if (newHabitEl) {
+            newHabitEl.classList.add("pop-in");
+            newHabitEl.addEventListener("animationend", () => {
+                newHabitEl.classList.remove("pop-in");
+            }, {once: true});
+        }
     });
 }
 
 function deleteHabit(categoryId, habitId) {
     openConfirm("Delete this habit?", () => {
         const category = state.categories.find(c => c.id === categoryId);
-        category.habits = category.habits.filter(h => h.id !== habitId);
-        render();
-        saveState();
+        if (!category) return;
+
+        const habitEl = document.querySelector(
+            `.category[data-id="${categoryId}"] .habit-row[data-id="${habitId}"]`
+        );
+
+        const removeHabit = () => {
+            category.habits = category.habits.filter(h => h.id !== habitId);
+            render();
+            saveState();
+        };
+
+        if (habitEl) {
+            habitEl.classList.add("pop-out");
+            habitEl.addEventListener("animationend", removeHabit, { once: true });
+        } else {
+            removeHabit();
+        }
     });
 }
-
 function toggleHabit(categoryId, habitId) {
     const today = new Date().toISOString().split("T")[0];
     const category = state.categories.find(c => c.id === categoryId);
@@ -265,10 +292,14 @@ function render() {
         const total = category.habits.length;
         const percentage = total === 0 ? 0 : (completed / total) * 100;
         const fill = div.querySelector(".progress-bar-fill");
-        fill.style.width = "0%";
-        setTimeout(() => {
+        if (isFirstRender) {
+            fill.style.width = "0%";
+            setTimeout(() => {
+                fill.style.width = `${percentage}%`;
+            }, 50);
+        } else {
             fill.style.width = `${percentage}%`;
-        }, 50);
+        }
 
         // event listeners
         div.querySelector(".delete-btn").addEventListener("click", () => {
