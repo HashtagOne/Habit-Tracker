@@ -120,17 +120,13 @@ function deleteHabit(categoryId, habitId) {
             `.category[data-id="${categoryId}"] .habit-row[data-id="${habitId}"]`
         );
 
-        const removeHabit = () => {
-            category.habits = category.habits.filter(h => h.id !== habitId);
-            render();
-            saveState();
-        };
-
         if (habitEl) {
             habitEl.classList.add("pop-out");
-            habitEl.addEventListener("animationend", removeHabit, { once: true });
-        } else {
-            removeHabit();
+            setTimeout(() => {
+                category.habits = category.habits.filter(h => h.id !== habitId);
+                render();
+                saveState();
+            }, 250);
         }
     });
 }
@@ -151,7 +147,6 @@ function toggleHabit(categoryId, habitId) {
     const percentage = total === 0 ? 0 : (completed/total) * 100;
     const fill = document.querySelector(`.category[data-id="${categoryId}"] .progress-bar-fill`);
     fill.style.width = `${percentage}%`;
-    console.log(fill);
     saveState();
 
     let streak = 0;
@@ -201,7 +196,6 @@ function closeModal() {
     const overlay = document.querySelector("#modal-overlay");
     overlay.classList.remove("open");
     overlay.classList.add("closing");
-    modalCallback = null;
 
     setTimeout(() => {
         overlay.classList.add("hidden");
@@ -222,13 +216,15 @@ function darkMode() {
     }
 }
 
-document.querySelector("#theme-toggle").addEventListener("change", darkMode);
-
 
 
 function render() {
     const board = document.querySelector("#board");
     board.innerHTML = "";
+
+    const shouldStagger = isFirstRender;
+    isFirstRender = false;
+
     if (state.categories.length === 0) {
         board.innerHTML = `
         <div class="empty-state">
@@ -292,7 +288,7 @@ function render() {
         const total = category.habits.length;
         const percentage = total === 0 ? 0 : (completed / total) * 100;
         const fill = div.querySelector(".progress-bar-fill");
-        if (isFirstRender) {
+        if (shouldStagger) {
             fill.style.width = "0%";
             setTimeout(() => {
                 fill.style.width = `${percentage}%`;
@@ -323,7 +319,7 @@ function render() {
             });
         });
 
-        if (isFirstRender) {
+        if (shouldStagger) {
             div.style.animationName = "fadeInDown";
             div.style.animationDuration = "0.8s";
             div.style.animationTimingFunction = "ease";
@@ -332,14 +328,18 @@ function render() {
         }
         board.appendChild(div);
     });
-    isFirstRender = false;
     lucide.createIcons();
 }
 //////////// DOM CONTENT RELOAD /////////////////////////
+
 document.addEventListener("DOMContentLoaded", () => {
     loadState();
     render();
 
+    const themeToggle = document.querySelector("#theme-toggle");
+    themeToggle.checked = localStorage.getItem("theme") === "dark";
+    themeToggle.addEventListener("change", darkMode)
+    
     document.querySelector("#header-category").addEventListener("click", addCategory);
     document.querySelector("#modal-cancel").addEventListener("click", closeModal);
     document.querySelector("#modal-save").addEventListener("click", () => {
@@ -351,6 +351,29 @@ document.addEventListener("DOMContentLoaded", () => {
         if (modalCallback) modalCallback(input);
         closeModal();
     });
+
+    document.querySelector("#modal-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            document.querySelector("#modal-save").click();
+        }
+        if (e.key === "Escape") {
+            closeModal();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const confirmOverlay = document.querySelector("#confirm-overlay");
+            if (!confirmOverlay.classList.contains("hidden")) {
+                document.querySelector("#confirm-delete").click();
+            }
+        }
+
+        if (e.key === "Escape") {
+            closeConfirm();
+            closeModal();
+        }
+    })
 
     document.querySelector("#confirm-cancel").addEventListener("click", closeConfirm);
     document.querySelector("#confirm-delete").addEventListener("click", () => {
