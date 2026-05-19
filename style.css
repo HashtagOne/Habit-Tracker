@@ -294,11 +294,6 @@ body {
     flex: 1;
 }
 
-#streak-counter {
-    font-size: 0.5rem;
-    color: var(--text-secondary);
-}
-
 .habit-checkbox {
     appearance: none;
     -webkit-appearance: none;
